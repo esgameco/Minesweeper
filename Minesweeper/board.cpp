@@ -1,11 +1,24 @@
 #include "board.h"
 #include "tile.h"
 
-Board::Board()
+const sf::Vector2i tilesNearPositions[8] =
+{
+    {-1, -1},
+    {-1, 0},
+    {-1, 1},
+    {0, -1},
+    {0, 1},
+    {1, -1},
+    {1, 0},
+    {1, 1}
+};
+
+Board::Board() : gameState(GameState::playing)
 {
 }
 
 Board::Board(int width, int height, std::shared_ptr<sf::Texture> texture)
+    : gameState(GameState::playing)
 {
     createBoard(width, height, texture);
 }
@@ -16,7 +29,7 @@ void Board::createBoard(int width, int height, std::shared_ptr<sf::Texture> text
     // Random number generator
     std::random_device dev;
     std::mt19937 rng(dev());
-    std::uniform_real_distribution<> dist(0, 0.6); // TODO: Move the 0.6 somewhere else
+    std::uniform_real_distribution<> dist(0, 0.55); // TODO: Move the 0.6 somewhere else
 
     this->tiles.reserve(width);
     for (int i = 0; i < width; i++)
@@ -38,19 +51,7 @@ void Board::createBoard(int width, int height, std::shared_ptr<sf::Texture> text
 void Board::setMinesNear()
 {
     // Tile mapping
-    // TODO: Maybe add out of this scope for performance
-    const sf::Vector2i tilesNearPositions[8] = 
-    {
-        {-1, -1},
-        {-1, 0},
-        {-1, 1},
-        {0, -1},
-        {0, 1},
-        {1, -1},
-        {1, 0},
-        {1, 1}
-    };
-
+    // DONE: Maybe add out of this scope for performance
     for (int i = 0; i < this->getBoardWidth(); i++)
     {
         for (int j = 0; j < this->getBoardHeight(); j++)
@@ -94,6 +95,100 @@ void Board::changeTile(int x, int y, State state)
     catch(...) {}
 }
 
+// Recursively reveals tiles from 0-mine tiles
+void Board::revealAround(const sf::Vector2i& tileCoord, std::vector<sf::Vector2i>& seenTiles)
+{
+    bool hasBeenSeen = false;
+    seenTiles.push_back(tileCoord);
+    try
+    {
+        Tile& tile = this->tiles.at(tileCoord.x).at(tileCoord.y);
+        tile.changeState(State::shown);
+        tile.updateSprite();
+        if (tile.noMinesNear())
+            // Iterates through nearby position map
+            for (const auto& pos : tilesNearPositions)
+            {
+                hasBeenSeen = false;
+                for (const auto& seen : seenTiles)
+                    // Makes sure that the new coord hasn't been seen
+                    // and that it is not the current coord
+                    if (tileCoord + pos == seen && tileCoord + pos != tileCoord)
+                    {
+                        hasBeenSeen = true;
+                        break;
+                    }
+                if (!hasBeenSeen)
+                    // Calls itself if the new position hasn't been seen 
+                    this->revealAround(tileCoord + pos, seenTiles);
+            }
+    }
+    catch (...) {}
+}
+
+// Recursively reveals tiles from 0-mine tiles
+// (Shorthand for method above)
+void Board::revealAround(const sf::Vector2i& tileCoords)
+{
+    std::vector<sf::Vector2i> seen;
+
+    this->revealAround(tileCoords, seen);
+}
+
+// Reveals random 0-mine tiles at beginning
+void Board::revealStart()
+{
+    const int TRIES = 5000; // TODO: Move constant somewhere else
+
+    // TODO: Wrap into function
+    // Random number generator
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<> x(0, this->getBoardWidth()-1); // TODO: Move the constant somewhere else
+    std::uniform_int_distribution<> y(0, this->getBoardHeight()-1);
+
+    for (int i = 0; i < TRIES; i++)
+    {
+        sf::Vector2i coord(x(rng), y(rng));
+        if (this->tiles[coord.x][coord.y].noMinesNear())
+        {
+            this->revealAround(coord);
+            return;
+        }
+    }
+}
+
+// Reveals all tiles
+void Board::revealAll()
+{
+    for (int i = 0; i < this->getBoardWidth(); i++)
+    {
+        for (int j = 0; j < this->getBoardHeight(); j++)
+        {
+            this->changeTile(i, j, State::shown);
+        }
+    }
+}
+
+// Checks whether a tile has a mine or not
+bool Board::checkMine(const sf::Vector2i& tileCoords)
+{
+    try
+    {
+        Tile& tile = this->tiles.at(tileCoords.x).at(tileCoords.y);
+        return tile.getMine();
+    }
+    catch (...) {}
+}
+
+// Ends the game
+// Reveals all tiles
+void Board::endGame()
+{
+    this->gameState = GameState::end;
+    this->revealAll();
+}
+
 // Gets the tile at screen coordinates
 sf::Vector2i Board::getTile(const sf::Vector2i& screenCoords)
 {
@@ -110,12 +205,15 @@ sf::Vector2i Board::getTile(const sf::Vector2i& screenCoords)
 
 // Reveals tile at a specific screen location
 // (Necessary to remove State access from main)
-// TODO: Use templates for this
 void Board::revealTile(const sf::Vector2i& screenCoords)
 {
     sf::Vector2i tileCoords = this->getTile(screenCoords);
 
-    this->changeTile(tileCoords.x, tileCoords.y, State::shown);
+    // Has mine
+    if (this->checkMine(tileCoords))
+        this->endGame();
+    else
+        this->revealAround(tileCoords);
 }
 
 // Flags tile at a specific screen location

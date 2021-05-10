@@ -34,6 +34,7 @@ public:
 
     // Getters
     const bool& getMine() const { return this->hasMine; };
+    const bool& noMinesNear() const { return this->minesNear == 0; };
     const sf::Vector2i& getTextureSize() const { return this->textureSize; };
 
     // Sprites

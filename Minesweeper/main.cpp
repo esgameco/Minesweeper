@@ -18,12 +18,15 @@ int main()
     Board board(20, 20, tileTexture);
     board.setMinesNear();
     board.updateTileSprites();
+    board.revealStart();
 
     // Input States
     sf::Vector2f unitMove(0, 0);
     sf::Vector2f mouseMove(0, 0);
     bool doMoveMouse = false;
-    const float MOVE_AMOUNT = 1.5f;
+    const float GLOBAL_MOVE = 1.5f;
+    const float MOUSE_MOVE = 1.0f;
+    const float KEYBOARD_MOVE = 10.0f;
 
     sf::Vector2f currentMousePosition(0, 0);
     sf::Vector2f previousMousePosition(0, 0);
@@ -131,7 +134,7 @@ int main()
         window.clear(sf::Color::Color(240, 240, 240, 255));
 
         // Board operations
-        board.moveBoard(MOVE_AMOUNT * (unitMove + mouseMove));
+        board.moveBoard(GLOBAL_MOVE * ((KEYBOARD_MOVE * unitMove) + (MOUSE_MOVE * mouseMove)));
         board.drawBoard(window);
 
         window.display();

@@ -6,6 +6,14 @@
 
 #include "tile.h"
 
+enum class GameState
+{
+    menu,
+    playing,
+    paused,
+    end
+};
+
 /*
     Board class
     boardPosition: Position of the board
@@ -23,9 +31,15 @@ public:
     void setMinesNear();
     void updateTileSprites();
     void changeTile(int, int, State);
+    void revealAround(const sf::Vector2i&, std::vector<sf::Vector2i>&);
+    void revealAround(const sf::Vector2i&); // Recursive handler
+    void revealStart();
+    void revealAll();
+    bool checkMine(const sf::Vector2i&);
 
     // Board operations
     void moveBoard(const sf::Vector2f& amount) { this->boardPosition += amount; }
+    void endGame();
 
     // Screen operations
     sf::Vector2i getTile(const sf::Vector2i&);
@@ -43,5 +57,6 @@ public:
 private:
     sf::Vector2f boardPosition;
     std::vector<std::vector<Tile>> tiles;
+    GameState gameState;
 };
 
