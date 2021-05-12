@@ -25,16 +25,16 @@ class Tile
 public:
     // Constructors/Destructors
     Tile(bool);
-    Tile(bool, const std::shared_ptr<sf::Texture>&);
-    Tile(bool, const std::shared_ptr<sf::Texture>&, const sf::Vector2i);
+    Tile(bool, const sf::Texture&);
+    Tile(bool, const sf::Texture&, const sf::Vector2i);
 
     // Tile Operations
     void setMinesNear(const std::vector<Tile*>&);
     void changeState(const State&);
 
     // Getters
-    const bool& getMine() const { return this->hasMine; };
-    const bool& noMinesNear() const { return this->minesNear == 0; };
+    const bool getMine() const { return this->hasMine; };
+    const bool noMinesNear() const { return this->minesNear == 0; };
     const sf::Vector2i& getTextureSize() const { return this->textureSize; };
 
     // Sprites

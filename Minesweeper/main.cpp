@@ -1,35 +1,26 @@
 #include <SFML/Graphics.hpp>
 
+#include "game.h"
 #include "board.h"
 #include "tile.h"
 
 int main()
 {
+    // Constants
+    const int WIDTH = 20;
+    const int HEIGHT = 20;
+
     // Setup Render Window
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "Minesweeper");
     window.setKeyRepeatEnabled(false);
     window.setFramerateLimit(75);
 
     // Setup Tile Texture
-    std::shared_ptr<sf::Texture> tileTexture = std::make_shared<sf::Texture>();
-    tileTexture->loadFromFile("tileset.png");
+    sf::Texture tileTexture = sf::Texture();
+    tileTexture.loadFromFile("tileset.png");
 
-    // Setup Board
-    Board board(20, 20, tileTexture);
-    board.setMinesNear();
-    board.updateTileSprites();
-    board.revealStart();
-
-    // Input States
-    sf::Vector2f unitMove(0, 0);
-    sf::Vector2f mouseMove(0, 0);
-    bool doMoveMouse = false;
-    const float GLOBAL_MOVE = 1.5f;
-    const float MOUSE_MOVE = 1.0f;
-    const float KEYBOARD_MOVE = 10.0f;
-
-    sf::Vector2f currentMousePosition(0, 0);
-    sf::Vector2f previousMousePosition(0, 0);
+    // Setup Game
+    Game game(window, WIDTH, HEIGHT, tileTexture);
 
     // Game Loop
     while (window.isOpen())
@@ -37,107 +28,22 @@ int main()
         sf::Event event;
         while (window.pollEvent(event))
         {
-            switch (event.type)
+            // Closed should be outside of the game scope
+            if (event.type == sf::Event::Closed)
             {
-            case sf::Event::Closed:
                 window.close();
-                break;
-
-            // Keyboard
-            case sf::Event::KeyPressed:
-                switch (event.key.code)
-                {
-                case sf::Keyboard::W:
-                    // Opposite for vertical directions
-                    unitMove += sf::Vector2f(0.0f, 1.0f);
-                    break;
-                case sf::Keyboard::A:
-                    unitMove += sf::Vector2f(1.0f, 0.0f);
-                    break;
-                case sf::Keyboard::S:
-                    // Opposite for vertical directions
-                    unitMove += sf::Vector2f(0.0f, -1.0f);
-                    break;
-                case sf::Keyboard::D:
-                    unitMove += sf::Vector2f(-1.0f, 0.0f);
-                    break;
-                default:
-                    break;
-                }
-                break;
-
-            case sf::Event::KeyReleased:
-                switch (event.key.code)
-                {
-                case sf::Keyboard::W:
-                    // Opposite for vertical directions
-                    unitMove -= sf::Vector2f(0.0f, 1.0f);
-                    break;
-                case sf::Keyboard::A:
-                    unitMove -= sf::Vector2f(1.0f, 0.0f);
-                    break;
-                case sf::Keyboard::S:
-                    // Opposite for vertical directions
-                    unitMove -= sf::Vector2f(0.0f, -1.0f);
-                    break;
-                case sf::Keyboard::D:
-                    unitMove -= sf::Vector2f(-1.0f, 0.0f);
-                    break;
-                default:
-                    break;
-                }
-                break;
-
-            // Mouse
-            case sf::Event::MouseButtonPressed:
-                switch (event.mouseButton.button)
-                {
-                case sf::Mouse::Left:
-                    board.revealTile(sf::Vector2i((int)event.mouseButton.x, (int)event.mouseButton.y));
-                    break;
-                case sf::Mouse::Right:
-                    board.flagTile(sf::Vector2i((int)event.mouseButton.x, (int)event.mouseButton.y));
-                    break;
-                case sf::Mouse::Middle:
-                    currentMousePosition = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                    doMoveMouse = true;
-                    break;
-                default:
-                    break;
-                }
-                break;
-
-            case sf::Event::MouseButtonReleased:
-                mouseMove = sf::Vector2f(0, 0);
-                doMoveMouse = false;
-                break;
-
-            case sf::Event::MouseMoved:
-                currentMousePosition = sf::Vector2f(event.mouseMove.x, event.mouseMove.y);
-                break;
-
-            default:
-                break;
+                // TODO: Find another way to exit cleanly
+                return 0;
+            }
+            else
+            {
+                // Game is in charge of handling the events
+                game.handleEvent(event);
             }
         }
 
-        if (doMoveMouse)
-        {
-            mouseMove = sf::Vector2f(0, 0);
-            // -= for opposite vector direction
-            mouseMove -= previousMousePosition - currentMousePosition;
-        }
-        
-        previousMousePosition = currentMousePosition;
-
-        // Drawing
-        window.clear(sf::Color::Color(240, 240, 240, 255));
-
-        // Board operations
-        board.moveBoard(GLOBAL_MOVE * ((KEYBOARD_MOVE * unitMove) + (MOUSE_MOVE * mouseMove)));
-        board.drawBoard(window);
-
-        window.display();
+        // Handle frame manages things that are done every frame like movement
+        game.handleFrame();
     }
 
     return 0;

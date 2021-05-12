@@ -1,35 +1,22 @@
 #include "board.h"
 #include "tile.h"
 
-const sf::Vector2i tilesNearPositions[8] =
-{
-    {-1, -1},
-    {-1, 0},
-    {-1, 1},
-    {0, -1},
-    {0, 1},
-    {1, -1},
-    {1, 0},
-    {1, 1}
-};
-
-Board::Board() : gameState(GameState::playing)
+Board::Board()
 {
 }
 
-Board::Board(int width, int height, std::shared_ptr<sf::Texture> texture)
-    : gameState(GameState::playing)
+Board::Board(int width, int height, sf::Texture& texture)
 {
     createBoard(width, height, texture);
 }
 
 // Creates a board 
-void Board::createBoard(int width, int height, std::shared_ptr<sf::Texture> texture)
+void Board::createBoard(int width, int height, sf::Texture& texture)
 {
     // Random number generator
     std::random_device dev;
     std::mt19937 rng(dev());
-    std::uniform_real_distribution<> dist(0, 0.55); // TODO: Move the 0.6 somewhere else
+    std::uniform_real_distribution<> dist(0, 0.5+MINE_CHANCE); // TODO: Move the constant somewhere else
 
     this->tiles.reserve(width);
     for (int i = 0; i < width; i++)
@@ -50,8 +37,6 @@ void Board::createBoard(int width, int height, std::shared_ptr<sf::Texture> text
 // Calculates and stores the mines near each tile
 void Board::setMinesNear()
 {
-    // Tile mapping
-    // DONE: Maybe add out of this scope for performance
     for (int i = 0; i < this->getBoardWidth(); i++)
     {
         for (int j = 0; j < this->getBoardHeight(); j++)
@@ -179,14 +164,7 @@ bool Board::checkMine(const sf::Vector2i& tileCoords)
         return tile.getMine();
     }
     catch (...) {}
-}
-
-// Ends the game
-// Reveals all tiles
-void Board::endGame()
-{
-    this->gameState = GameState::end;
-    this->revealAll();
+    return false;
 }
 
 // Gets the tile at screen coordinates
@@ -205,15 +183,20 @@ sf::Vector2i Board::getTile(const sf::Vector2i& screenCoords)
 
 // Reveals tile at a specific screen location
 // (Necessary to remove State access from main)
-void Board::revealTile(const sf::Vector2i& screenCoords)
+bool Board::revealTile(const sf::Vector2i& screenCoords)
 {
     sf::Vector2i tileCoords = this->getTile(screenCoords);
 
     // Has mine
     if (this->checkMine(tileCoords))
-        this->endGame();
-    else
-        this->revealAround(tileCoords);
+    {
+        this->revealAll();
+        return true;
+    }
+
+    // Doesn't have mine
+    this->revealAround(tileCoords);
+    return false;
 }
 
 // Flags tile at a specific screen location

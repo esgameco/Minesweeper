@@ -6,12 +6,18 @@
 
 #include "tile.h"
 
-enum class GameState
+// TODO: Figure out the best way to store this
+// TODO: Capitalize
+const sf::Vector2i tilesNearPositions[8] =
 {
-    menu,
-    playing,
-    paused,
-    end
+    {-1, -1},
+    {-1, 0},
+    {-1, 1},
+    {0, -1},
+    {0, 1},
+    {1, -1},
+    {1, 0},
+    {1, 1}
 };
 
 /*
@@ -24,10 +30,10 @@ class Board
 public:
     // Constructors/Destructors
     Board();
-    Board(int, int, std::shared_ptr<sf::Texture>);
+    Board(int, int, sf::Texture&);
 
     // Tile operations
-    void createBoard(int, int, std::shared_ptr<sf::Texture>);
+    void createBoard(int, int, sf::Texture&);
     void setMinesNear();
     void updateTileSprites();
     void changeTile(int, int, State);
@@ -38,25 +44,26 @@ public:
     bool checkMine(const sf::Vector2i&);
 
     // Board operations
-    void moveBoard(const sf::Vector2f& amount) { this->boardPosition += amount; }
-    void endGame();
+    void moveBoard(const sf::Vector2f& amount) { this->boardPosition += amount; };
 
     // Screen operations
     sf::Vector2i getTile(const sf::Vector2i&);
-    void revealTile(const sf::Vector2i&);
+    bool revealTile(const sf::Vector2i&);
     void flagTile(const sf::Vector2i&);
 
     // Getters
-    int getBoardWidth() { return this->tiles.size(); };
-    int getBoardHeight() { return this->tiles.front().size(); };
-    const sf::Vector2i& getTileSize() { return this->tiles.at(0).at(0).getTextureSize(); };
+    const int getBoardWidth() const { return this->tiles.size(); };
+    const int getBoardHeight() const { return this->tiles.front().size(); };
+    const sf::Vector2i& getTileSize() const { return this->tiles.at(0).at(0).getTextureSize(); };
 
     // Sprites
     void drawBoard(sf::RenderWindow&);
 
 private:
+    // Constants
+    const double MINE_CHANCE = 0.1;
+
     sf::Vector2f boardPosition;
     std::vector<std::vector<Tile>> tiles;
-    GameState gameState;
 };
 
