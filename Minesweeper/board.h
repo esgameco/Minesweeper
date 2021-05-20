@@ -22,6 +22,9 @@ const sf::Vector2i tilesNearPositions[8] =
 
 /*
     Board class
+
+    MINE_CHANCE: The chance of a mine occurring
+
     boardPosition: Position of the board
     tiles: The 2 dimensional array of Tiles
 */
@@ -31,6 +34,7 @@ public:
     // Constructors/Destructors
     Board();
     Board(int, int, sf::Texture&);
+    void newBoard(int, int, sf::Texture&);
 
     // Tile operations
     void createBoard(int, int, sf::Texture&);
@@ -41,7 +45,7 @@ public:
     void revealAround(const sf::Vector2i&); // Recursive handler
     void revealStart();
     void revealAll();
-    bool checkMine(const sf::Vector2i&);
+    bool checkMine(const sf::Vector2i&, bool);
 
     // Board operations
     void moveBoard(const sf::Vector2f& amount) { this->boardPosition += amount; };

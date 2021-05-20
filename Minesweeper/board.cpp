@@ -5,9 +5,16 @@ Board::Board()
 {
 }
 
-Board::Board(int width, int height, sf::Texture& texture)
+Board::Board(int _width, int _height, sf::Texture& _texture)
 {
-    createBoard(width, height, texture);
+    this->newBoard(_width, _height, _texture);
+}
+
+// Resets the board
+void Board::newBoard(int width, int height, sf::Texture& texture)
+{
+    this->tiles.clear();
+    this->createBoard(width, height, texture);
 }
 
 // Creates a board 
@@ -156,12 +163,18 @@ void Board::revealAll()
 }
 
 // Checks whether a tile has a mine or not
-bool Board::checkMine(const sf::Vector2i& tileCoords)
+bool Board::checkMine(const sf::Vector2i& tileCoords, bool onlyIfNotFlagged=false)
 {
     try
     {
         Tile& tile = this->tiles.at(tileCoords.x).at(tileCoords.y);
-        return tile.getMine();
+        if (onlyIfNotFlagged)
+        {
+            if (!tile.getFlagged())
+                return tile.getMine();
+        }
+        else
+            return tile.getMine();
     }
     catch (...) {}
     return false;
@@ -188,7 +201,7 @@ bool Board::revealTile(const sf::Vector2i& screenCoords)
     sf::Vector2i tileCoords = this->getTile(screenCoords);
 
     // Has mine
-    if (this->checkMine(tileCoords))
+    if (this->checkMine(tileCoords, true))
     {
         this->revealAll();
         return true;

@@ -14,9 +14,11 @@ enum class State
 
 /*
     Tile class
+
     hasMine: Whether the tile has a mine or not
     numberNear: The number of tiles with mines within radius
     state: Whether the tile is hidden, revealed, or flagged
+
     sprite: The SFML sprite of the tile
     textureSize: The size of each individual texture in a spritesheet
 */
@@ -31,8 +33,10 @@ public:
     // Tile Operations
     void setMinesNear(const std::vector<Tile*>&);
     void changeState(const State&);
+    void changeStateOverride(const State& newState) { this->state = newState; };
 
     // Getters
+    const bool getFlagged() const { return this->state == State::flagged; };
     const bool getMine() const { return this->hasMine; };
     const bool noMinesNear() const { return this->minesNear == 0; };
     const sf::Vector2i& getTextureSize() const { return this->textureSize; };

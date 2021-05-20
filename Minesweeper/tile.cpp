@@ -2,22 +2,22 @@
 
 // Constructors
 
-Tile::Tile(bool hasMine) : hasMine(hasMine), state(State::hidden), minesNear(0) {}
+Tile::Tile(bool _hasMine) : hasMine(_hasMine), state(State::hidden), minesNear(0) {}
 
 // Will only work for square tiles
-Tile::Tile(bool hasMine, const sf::Texture& texture)
-    : hasMine(hasMine), state(State::hidden), minesNear(0)
+Tile::Tile(bool _hasMine, const sf::Texture& _texture)
+    : hasMine(_hasMine), state(State::hidden), minesNear(0)
 {
-    sf::Vector2u size = texture.getSize();
+    sf::Vector2u size = _texture.getSize();
     this->textureSize = sf::Vector2i(size.y, size.y);
-    this->sprite = sf::Sprite(texture);
+    this->sprite = sf::Sprite(_texture);
     this->changeTextureNumber(0); // TODO: Remove this
 }
 
-Tile::Tile(bool hasMine, const sf::Texture& texture, const sf::Vector2i size)
-    : hasMine(hasMine), state(State::hidden), minesNear(0), textureSize(size)
+Tile::Tile(bool _hasMine, const sf::Texture& _texture, const sf::Vector2i _size)
+    : hasMine(_hasMine), state(State::hidden), minesNear(0), textureSize(_size)
 {
-    this->sprite = sf::Sprite(texture);
+    this->sprite = sf::Sprite(_texture);
     this->changeTextureNumber(0); // TODO: Remove this
 }
 
