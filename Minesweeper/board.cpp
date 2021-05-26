@@ -142,7 +142,7 @@ void Board::revealStart()
     for (int i = 0; i < TRIES; i++)
     {
         sf::Vector2i coord(x(rng), y(rng));
-        if (this->tiles[coord.x][coord.y].noMinesNear())
+        if (this->tiles[coord.x][coord.y].noMinesNear() && !this->tiles[coord.x][coord.y].getMine())
         {
             this->revealAround(coord);
             return;
